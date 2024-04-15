@@ -1,0 +1,18 @@
+@model IEnumerable<AfsCMS.Models.Product>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Products</h1>
+
+@foreach(var product in Model)
+{
+    <div>
+        <h4>@product.Id</h4>
+        <h4>@product.Name</h4>
+        
+    </div>
+}
