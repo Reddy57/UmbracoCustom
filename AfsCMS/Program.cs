@@ -1,6 +1,4 @@
-using ApplicationCore.Entities;
 using Infrastructure.Data;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,12 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Add Umbraco CMS services
-/*builder.Services.AddUmbraco(builder.Environment, builder.Configuration)
-    .AddBackOffice()  // Adds the backoffice services
-    .AddWebsite()     // Adds the website services
-    .AddComposers();  // Adds the composers*/
-
+// Configure Umbraco
 builder.CreateUmbracoBuilder()
     .AddBackOffice()
     .AddWebsite()
@@ -21,36 +14,14 @@ builder.CreateUmbracoBuilder()
     .AddComposers()
     .Build();
 
-// Add any custom services here
-// e.g., builder.Services.AddScoped<IMyService, MyService>();
-
-
-// Specific to Identity Database
-
+// Add database context for Identity
 builder.Services.AddDbContext<AfsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("umbracoDbDSN")));
 
 
-
-builder.Services.AddIdentity<User, Role>()
-    .AddEntityFrameworkStores<AfsDbContext>()
-    .AddDefaultTokenProviders();
-
-builder.Services.Configure<IdentityOptions>(options =>
-{
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequiredLength = 6;
-
-    // User settings
-    options.User.AllowedUserNameCharacters =
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
-});
-
-
 var app = builder.Build();
+
+// Boot Umbraco
 await app.BootUmbracoAsync();
 
 // Configure the HTTP request pipeline.
@@ -62,10 +33,11 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
-// Enable Umbraco backoffice
+
+
+// Umbraco middleware and endpoints
 app.UseUmbraco()
     .WithMiddleware(u =>
     {
@@ -79,7 +51,10 @@ app.UseUmbraco()
         u.UseWebsiteEndpoints();
     });
 
-// Your MVC routes
+app.UseAuthentication(); // Ensure this is before UseAuthorization
+app.UseAuthorization();
+
+// MVC routes
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllerRoute(
