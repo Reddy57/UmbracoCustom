@@ -1,10 +1,9 @@
+using ApplicationCore.Contracts.Services;
 using Infrastructure.Data;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddControllersWithViews();
 
 // Configure Umbraco
 builder.CreateUmbracoBuilder()
@@ -14,9 +13,25 @@ builder.CreateUmbracoBuilder()
     .AddComposers()
     .Build();
 
+// Add services to the container.
+builder.Services.AddControllersWithViews();
+
+builder.Services.AddTransient<IAccountService, AccountService>();
+
 // Add database context for Identity
 builder.Services.AddDbContext<AfsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("umbracoDbDSN")));
+
+//sets the default authentication scheme for the app
+builder.Services.AddAuthentication()
+    .AddCookie("AfsScheme",options =>
+    {
+        options.Cookie.Name = "AfsAuthCookie";
+        options.ExpireTimeSpan = TimeSpan.FromHours(2);
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+
+    });
 
 
 var app = builder.Build();
@@ -34,7 +49,6 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-
 
 
 // Umbraco middleware and endpoints

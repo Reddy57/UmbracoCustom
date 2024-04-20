@@ -14,4 +14,6 @@ public class LoginViewModel
 
     [Display(Name = "Remember me?")]
     public bool RememberMe { get; set; }
+
+    public bool IsValid { get; set; }
 }

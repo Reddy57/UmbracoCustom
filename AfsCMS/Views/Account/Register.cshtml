@@ -1,0 +1,16 @@
+@model ApplicationCore.Models.RegisterViewModel
+
+<form asp-action="Register" method="post">
+    <div asp-validation-summary="ModelOnly"></div>
+    
+    <label asp-for="Email"></label>
+    <input asp-for="Email" type="email" />
+
+    <label asp-for="Password"></label>
+    <input asp-for="Password" type="password" />
+
+    <label asp-for="ConfirmPassword"></label>
+    <input asp-for="ConfirmPassword" type="password" />
+    
+    <button type="submit">Register</button>
+</form>

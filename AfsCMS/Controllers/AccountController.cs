@@ -1,63 +1,97 @@
+using System.Security.Claims;
+using ApplicationCore.Contracts.Services;
 using ApplicationCore.Models;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AfsCMS.Controllers
+namespace AfsCMS.Controllers;
+
+public class AccountController : Controller
 {
-    public class AccountController : Controller
+    private readonly IAccountService _accountService;
+
+    public AccountController(IAccountService accountService)
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly UserManager<IdentityUser> _userManager;
+        _accountService = accountService;
+    }
 
-        public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+
+    [HttpGet]
+    public IActionResult Register()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(RegisterViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        // Check if the member already exists
+        var existingMember = await _accountService.GetUserByEmail(model.Email);
+        if (existingMember != null)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
-        }
-
-        [HttpGet]
-        public IActionResult Login(string returnUrl = null)
-        {
-            ViewData["ReturnUrl"] = returnUrl;
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
-        {
-            ViewData["ReturnUrl"] = returnUrl;
-            if (ModelState.IsValid)
-            {
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-                if (result.Succeeded)
-                {
-                    var user = await _userManager.FindByEmailAsync(model.Email);
-                    if (await _userManager.IsInRoleAsync(user, "Admin"))
-                    {
-                        return Redirect("/umbraco"); // Redirect admin to the back office
-                    }
-                    return RedirectToLocal(returnUrl);
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                }
-            }
-
+            ModelState.AddModelError("", "A member with this email already exists.");
             return View(model);
         }
 
-        private IActionResult RedirectToLocal(string returnUrl)
+        // Create the member
+        var result = await _accountService.CreateUser(model);
+
+        return result ? RedirectToAction("Login") : RedirectToAction("Index", "Home");
+    }
+
+    [HttpGet]
+    public IActionResult Login(string returnUrl = null)
+    {
+        ViewData["ReturnUrl"] = returnUrl;
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
+    {
+        ViewData["ReturnUrl"] = returnUrl;
+        if (!ModelState.IsValid) return View(model);
+
+        // Validate the member
+        var result = await _accountService.ValidateUser(model.Email, model.Password);
+
+        if (result.IsValid)
         {
-            if (Url.IsLocalUrl(returnUrl))
+            var claims = new List<Claim>
             {
-                return Redirect(returnUrl);
-            }
-            else
-            {
-                return RedirectToAction(nameof(ProductsController.Index), "Home");
-            }
+                new(ClaimTypes.Name, result.Email),
+                new(ClaimTypes.GivenName, result.FirstName),
+                new(ClaimTypes.Surname, result.LastName),
+                new(ClaimTypes.NameIdentifier, result.Id.ToString())
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignInAsync("AfsScheme", new ClaimsPrincipal(claimsIdentity));
+
+
+            return RedirectToLocal(returnUrl);
         }
+
+        ModelState.AddModelError("", "Invalid login attempt.");
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync();
+        return RedirectToAction("Login");
+    }
+
+    private IActionResult RedirectToLocal(string returnUrl)
+    {
+        if (Url.IsLocalUrl(returnUrl))
+            return Redirect(returnUrl);
+        return RedirectToAction("Index", "Home");
     }
 }
