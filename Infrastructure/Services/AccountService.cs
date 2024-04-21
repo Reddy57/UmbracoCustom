@@ -11,22 +11,22 @@ namespace Infrastructure.Services;
 public class AccountService : IAccountService
 {
     private readonly AfsDbContext _afsDbContext;
-    private readonly PasswordHasher<AfsUser> _passwordHasher;
+    private readonly PasswordHasher<User> _passwordHasher;
 
     public AccountService(AfsDbContext afsDbContext)
     {
         _afsDbContext = afsDbContext;
-        _passwordHasher = new PasswordHasher<AfsUser>();
+        _passwordHasher = new PasswordHasher<User>();
     }
 
     public async Task<LoginResponseViewModel> ValidateUser(string email, string password)
     {
-        var user = await _afsDbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
-        if (user == null || string.IsNullOrEmpty(user.SecurityStamp))
+        var user = await _afsDbContext.Users.Include(u => u.UserCredentials).FirstOrDefaultAsync(u => u.Email == email);
+        if (user == null || string.IsNullOrEmpty(user.UserCredentials.Salt))
             return new LoginResponseViewModel { Email = email, IsValid = false };
 
-        var saltedPassword = user.SecurityStamp + password;
-        var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, saltedPassword);
+        var saltedPassword = user.UserCredentials.Salt + password;
+        var result = _passwordHasher.VerifyHashedPassword(user, user.UserCredentials.Password, saltedPassword);
         return new LoginResponseViewModel
         {
             Email = email,
@@ -38,9 +38,9 @@ public class AccountService : IAccountService
 
     public async Task<bool> CreateUser(RegisterViewModel requestModel)
     {
-        var salt = GenerateSalt();
+        /*var salt = GenerateSalt();
         var saltedPassword = salt + requestModel.Password;
-        var user = new AfsUser
+        var user = new User
         {
             FirstName = requestModel.
             Email = requestModel.Email,
@@ -51,12 +51,38 @@ public class AccountService : IAccountService
         _afsDbContext.Users.Add(user);
         var saveResult = await _afsDbContext.SaveChangesAsync();
 
-        return saveResult > 0;
+        return saveResult > 0;*/
+        
+        throw new NotImplementedException();
+
     }
 
-    public async Task<AfsUser> GetUserByEmail(string email)
+    public async Task<bool> CreateUserWithPassword(RegisterViewModel requestModel)
     {
-        return await _afsDbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+        
+        var user = await _afsDbContext.Users.FirstOrDefaultAsync(u => u.Email == requestModel.Email);
+
+        var salt = GenerateSalt();
+       var saltedPassword = salt + requestModel.Password;
+       var userCredential = new UserCredentials
+       {
+           
+           Email = requestModel.Email,
+           Salt = salt,
+           Password = _passwordHasher.HashPassword(null, saltedPassword)
+       };
+
+       _afsDbContext.Users.Add(user);
+       var saveResult = await _afsDbContext.SaveChangesAsync();
+
+       return saveResult > 0;
+    }
+
+ 
+
+    public async Task<User> GetUserByEmail(string email)
+    {
+         return await _afsDbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
     private static string GenerateSalt()
