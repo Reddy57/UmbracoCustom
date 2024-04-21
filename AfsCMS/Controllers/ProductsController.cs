@@ -1,56 +1,39 @@
 using AfsCMS.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Cms.Core.Security;
-using Umbraco.Cms.Web.Common.Controllers;
 
-namespace AfsCMS.Controllers
+namespace AfsCMS.Controllers;
+
+public class ProductsController : Controller
 {
-    public class ProductsController : Controller
-    
-    {    private readonly IBackOfficeSecurityAccessor _backOfficeSecurityAccessor;
+    private readonly IAuthenticationSchemeProvider _schemeProvider;
 
-        public ProductsController(IBackOfficeSecurityAccessor backOfficeSecurityAccessor)
-        {
-            _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
-        }
-        // GET: Products
-        public ActionResult Index()
-        {
-            
-            var backOfficeSecurity = _backOfficeSecurityAccessor.BackOfficeSecurity;
-            if (backOfficeSecurity.IsAuthenticated())
-            {
-                var user = backOfficeSecurity.CurrentUser;
+    public ProductsController(IAuthenticationSchemeProvider schemeProvider)
+    {
+        _schemeProvider = schemeProvider;
+    }
 
-                // You now have access to user details
-                return Json(new
-                {
-                    Name = user.Name,
-                    Email = user.Email,
-                    UserGroups = user.Groups.Select(g => g.Alias).ToList()
-                });
-            }
-            else
-            {
-                // No user is logged in
-                return Json(null);
-            }
-
-            
-            
-            var products  = new List<Product>
-            {
-                new Product { Id = 1, Name = "Product 1" },
-                new Product { Id = 2, Name = "Product 2" },
-                new Product { Id = 3, Name = "Product 3" }
-            };
-            return View(products);
-        }
+    // GET: Products
+    [Authorize]
+    public async Task<ActionResult> Index()
+    {
         
-        public ActionResult Privacy()
-        {
-            return View();
-        }
+        var defaultScheme = await _schemeProvider.GetDefaultAuthenticateSchemeAsync();
 
+        var products = new List<Product>
+        {
+            new() { Id = 1, Name = "Product 1" },
+            new() { Id = 2, Name = "Product 2" },
+            new() { Id = 3, Name = "Product 3" },
+            new() { Id = 4, Name = "Product 4" },
+            new() { Id = 5, Name = "Product 5" }
+        };
+        return View(products);
+    }
+
+    public ActionResult Privacy()
+    {
+        return View();
     }
 }

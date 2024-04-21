@@ -25,20 +25,12 @@ public class AccountController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterViewModel model)
+    public async Task<IActionResult> Register(RegisterWithCredentialsViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
 
-        // Check if the member already exists
-        var existingMember = await _accountService.GetUserByEmail(model.Email);
-        if (existingMember != null)
-        {
-            ModelState.AddModelError("", "A member with this email already exists.");
-            return View(model);
-        }
-
         // Create the member
-        var result = await _accountService.CreateUser(model);
+        var result = await _accountService.CreateUserWithPassword(model);
 
         return result ? RedirectToAction("Login") : RedirectToAction("Index", "Home");
     }

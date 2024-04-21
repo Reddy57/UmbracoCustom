@@ -38,51 +38,49 @@ public class AccountService : IAccountService
 
     public async Task<bool> CreateUser(RegisterViewModel requestModel)
     {
-        /*var salt = GenerateSalt();
-        var saltedPassword = salt + requestModel.Password;
+       
         var user = new User
         {
             FirstName = requestModel.
             Email = requestModel.Email,
-            SecurityStamp = salt,
-            PasswordHash = _passwordHasher.HashPassword(null, saltedPassword)
+            LastName = requestModel.LastName,
         };
 
         _afsDbContext.Users.Add(user);
         var saveResult = await _afsDbContext.SaveChangesAsync();
 
-        return saveResult > 0;*/
-        
-        throw new NotImplementedException();
+        return saveResult > 0;
 
     }
 
-    public async Task<bool> CreateUserWithPassword(RegisterViewModel requestModel)
+    public async Task<bool> CreateUserWithPassword(RegisterWithCredentialsViewModel requestModel)
     {
-        
         var user = await _afsDbContext.Users.FirstOrDefaultAsync(u => u.Email == requestModel.Email);
 
+        if (user == null)
+        {
+            return false;
+        }
         var salt = GenerateSalt();
-       var saltedPassword = salt + requestModel.Password;
-       var userCredential = new UserCredentials
-       {
-           
-           Email = requestModel.Email,
-           Salt = salt,
-           Password = _passwordHasher.HashPassword(null, saltedPassword)
-       };
+        var saltedPassword = salt + requestModel.Password;
+        var userCredential = new UserCredentials
+        {
+            UserId = user.Id,
+            Email = requestModel.Email,
+            Salt = salt,
+            Password = _passwordHasher.HashPassword(null, saltedPassword)
+        };
 
-       _afsDbContext.Users.Add(user);
-       var saveResult = await _afsDbContext.SaveChangesAsync();
+        _afsDbContext.UserCredentials.Add(userCredential);
+        var saveResult = await _afsDbContext.SaveChangesAsync();
 
-       return saveResult > 0;
+        return saveResult > 0;
     }
 
- 
 
     public async Task<User> GetUserByEmail(string email)
     {
-         return await _afsDbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+        return await _afsDbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
     private static string GenerateSalt()

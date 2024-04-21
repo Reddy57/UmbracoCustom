@@ -23,14 +23,19 @@ builder.Services.AddDbContext<AfsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("umbracoDbDSN")));
 
 //sets the default authentication scheme for the app
-builder.Services.AddAuthentication()
-    .AddCookie("AfsScheme",options =>
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = "AfsScheme";
+        options.DefaultAuthenticateScheme = "AfsScheme";
+        options.DefaultChallengeScheme = "AfsScheme";
+        options.DefaultSignInScheme = "AfsScheme";
+    })
+    .AddCookie("AfsScheme", options =>
     {
         options.Cookie.Name = "AfsAuthCookie";
         options.ExpireTimeSpan = TimeSpan.FromHours(2);
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
-
     });
 
 

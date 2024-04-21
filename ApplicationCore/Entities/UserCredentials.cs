@@ -8,9 +8,9 @@ public class UserCredentials
     public string Salt { get; set; }
     public string Email { get; set; }
     
-    public int FailedPasswordAttemptCount { get; set; }
+    public int? FailedPasswordAttemptCount { get; set; }
     public DateTime? LastLockoutDate { get; set; }
-    public string PasswordResetToken { get; set; }
+    public string? PasswordResetToken { get; set; }
     public DateTime? PasswordResetExpiration { get; set; }
     public bool? HasUpdatedPassword { get; set; }
     public DateTime? LastLoginDate { get; set; }

@@ -9,10 +9,10 @@ public class User
     public string Email { get; set; } = null!;
     public string FirstName { get; set; } = null!;
     public string LastName { get; set; } = null!;
-    public bool IsSuperUser { get; set; }
-    public string DisplayName { get; set; }
-    public string LastIpAddress { get; set; }
-    public bool IsDeleted { get; set; }
+    public bool? IsSuperUser { get; set; }
+    public string? DisplayName { get; set; }
+    public string? LastIpAddress { get; set; }
+    public bool? IsDeleted { get; set; }
     public int? CreatedByUserId { get; set; }
     public bool? IsLockedOut { get; set; }
     public bool? IsApproved { get; set; }
