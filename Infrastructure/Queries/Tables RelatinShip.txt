@@ -1,0 +1,81 @@
+I am using Umbraco1 3, Give me SQL queries to get the Member information along with custom properties data for nodeId =2069
+
+'umbracoNode'
+id	int	NULL	NO
+uniqueId	uniqueidentifier	NULL	NO
+parentId	int	NULL	NO
+level	int	NULL	NO
+path	nvarchar	150	NO
+sortOrder	int	NULL	NO
+trashed	bit	NULL	NO
+nodeUser	int	NULL	YES
+text	nvarchar	255	YES
+nodeObjectType	uniqueidentifier	NULL	YES
+createDate	datetime	NULL	NO
+
+cmsMember
+nodeId	int	NULL	NO
+Email	nvarchar	1000	NO
+LoginName	nvarchar	1000	NO
+Password	nvarchar	1000	NO
+passwordConfig	nvarchar	500	YES
+securityStampToken	nvarchar	255	YES
+emailConfirmedDate	datetime	NULL	YES
+failedPasswordAttempts	int	NULL	YES
+isLockedOut	bit	NULL	YES
+isApproved	bit	NULL	NO
+lastLoginDate	datetime	NULL	YES
+lastLockoutDate	datetime	NULL	YES
+lastPasswordChangeDate	datetime	NULL	YES
+
+cmsPropertyType
+id	int	NULL	NO
+dataTypeId	int	NULL	NO
+contentTypeId	int	NULL	NO
+propertyTypeGroupId	int	NULL	YES
+Alias	nvarchar	255	NO
+Name	nvarchar	255	YES
+sortOrder	int	NULL	NO
+mandatory	bit	NULL	NO
+mandatoryMessage	nvarchar	500	YES
+validationRegExp	nvarchar	255	YES
+validationRegExpMessage	nvarchar	500	YES
+Description	nvarchar	2000	YES
+labelOnTop	bit	NULL	NO
+variations	int	NULL	NO
+UniqueID	uniqueidentifier	NULL	NO
+
+umbracoPropertyData
+id	int	NULL	NO
+versionId	int	NULL	NO
+propertyTypeId	int	NULL	NO
+languageId	int	NULL	YES
+segment	nvarchar	256	YES
+intValue	int	NULL	YES
+decimalValue	decimal	NULL	YES
+dateValue	datetime	NULL	YES
+varcharValue	nvarchar	512	YES
+textValue	nvarchar	-1	YES
+
+umbracoContentVersion
+id	int	NULL	NO
+nodeId	int	NULL	NO
+versionDate	datetime	NULL	NO
+userId	int	NULL	YES
+current	bit	NULL	NO
+text	nvarchar	255	YES
+preventCleanup	bit	NULL	NO
+
+
+Here is relationship between all the tables
+FK_cmsMember_umbracoContent_nodeId	cmsMember	nodeId	cmsMember	nodeId
+FK_cmsPropertyType_cmsContentType_nodeId	cmsPropertyType	contentTypeId	cmsPropertyType	contentTypeId
+FK_cmsPropertyType_cmsPropertyTypeGroup_id	cmsPropertyType	propertyTypeGroupId	cmsPropertyType	propertyTypeGroupId
+FK_cmsPropertyType_umbracoDataType_nodeId	cmsPropertyType	dataTypeId	cmsPropertyType	dataTypeId
+FK_umbracoContentVersion_umbracoContent_nodeId	umbracoContentVersion	nodeId	umbracoContentVersion	nodeId
+FK_umbracoContentVersion_umbracoUser_id	umbracoContentVersion	userId	umbracoContentVersion	userId
+FK_umbracoNode_umbracoNode_id	umbracoNode	parentId	umbracoNode	parentId
+FK_umbracoNode_umbracoUser_id	umbracoNode	nodeUser	umbracoNode	nodeUser
+FK_umbracoPropertyData_cmsPropertyType_id	umbracoPropertyData	propertyTypeId	umbracoPropertyData	propertyTypeId
+FK_umbracoPropertyData_umbracoContentVersion_id	umbracoPropertyData	versionId	umbracoPropertyData	versionId
+FK_umbracoPropertyData_umbracoLanguage_id	umbracoPropertyData	languageId	umbracoPropertyData	languageId
