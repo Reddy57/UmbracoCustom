@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using ApplicationCore.Models;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
@@ -11,12 +11,13 @@ namespace AfsCMS.Controllers;
 
 public class MembersController : Controller
 {
+    private readonly IMemberGroupService _memberGroupService;
     private readonly IMemberManager _memberManager;
     private readonly IMemberService _memberService;
     private readonly IMemberSignInManager _memberSignInManager;
-    private readonly IMemberGroupService _memberGroupService;
 
-    public MembersController(IMemberService memberService, IMemberManager memberManager, IMemberSignInManager memberSignInManager, IMemberGroupService memberGroupService)
+    public MembersController(IMemberService memberService, IMemberManager memberManager,
+        IMemberSignInManager memberSignInManager, IMemberGroupService memberGroupService)
     {
         _memberService = memberService;
         _memberManager = memberManager;
@@ -29,11 +30,13 @@ public class MembersController : Controller
     {
         return View();
     }
+
     [HttpPost]
     public async Task<IActionResult> Register(RegisterWithCredentialsViewModel model)
     {
         // Check if the member already exists
-        if (_memberService.GetByEmail(model.Email) != null) return BadRequest("A member with this email already exists.");
+        if (_memberService.GetByEmail(model.Email) != null)
+            return BadRequest("A member with this email already exists.");
 
         var identityUser =
             MemberIdentityUser.CreateNew(model.Email, model.Email, "Member", true, "");
@@ -44,7 +47,7 @@ public class MembersController : Controller
 
         return Ok("Member created successfully.");
     }
-    
+
     [HttpGet]
     public IActionResult Login()
     {
@@ -52,59 +55,34 @@ public class MembersController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
+    public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
         // Attempt to find the member identity user first
         var memberIdentityUser = await _memberManager.FindByEmailAsync(model.Email);
         if (memberIdentityUser != null)
         {
             // Use MemberSignInManager to handle the sign-in process
-            var result = await _memberSignInManager.PasswordSignInAsync(model.Email, model.Password, isPersistent: true, lockoutOnFailure: false);
+            var result = await _memberSignInManager.PasswordSignInAsync(model.Email, model.Password, true, false);
             if (result.Succeeded)
             {
+                // Fetch and add role claims
+                var roles = await _memberManager.GetRolesAsync(memberIdentityUser);
+
                 // Add roles to claims after successful login
-                await AddRolesToClaims(memberIdentityUser);
+                foreach (var role in roles)
+                    memberIdentityUser?.Claims.Add(new IdentityUserClaim<string>
+                        { ClaimType = ClaimTypes.Role, ClaimValue = role, UserId = memberIdentityUser?.Id ?? string.Empty });
+                if (memberIdentityUser != null) await _memberSignInManager.SignInAsync(memberIdentityUser, true);
+
+
                 return RedirectToAction("Index"); // Redirect to the target page after login
             }
         }
 
         ModelState.AddModelError("", "Invalid login attempt.");
         return View();
-
-    }
-    
-    private async Task AddRolesToClaims(MemberIdentityUser member)
-    {
-        
-        // Create a ClaimsPrincipal with the required claims
-        var principal = await CreateUserPrincipalWithRoles(member);
-    
-        // Sign out the current user session before signing in again
-        await _memberSignInManager.SignOutAsync();
-
-        // Use SignInAsync to sign in the user with the new principal
-        await _memberSignInManager.SignInAsync(member, true);
-
     }
 
-    private async Task<ClaimsPrincipal> CreateUserPrincipalWithRoles(MemberIdentityUser member)
-    {
-        var principal = await _memberSignInManager.CreateUserPrincipalAsync(member);
-        var identity = (ClaimsIdentity)principal.Identity;
-
-        // Fetch and add role claims
-        var roles = await _memberManager.GetRolesAsync(member);
-
-        
-        foreach (var role in roles)
-        {
-            identity.AddClaim(new Claim(ClaimTypes.Role, role));
-        }
-
-        return principal;
-    }
-
-    
 
     [HttpPost]
     public async Task<IActionResult> Logout()
@@ -112,72 +90,51 @@ public class MembersController : Controller
         await _memberSignInManager.SignOutAsync();
         return Redirect("/");
     }
-    
-    
+
+
     [HttpGet]
     public IActionResult CreateGroup()
     {
         return View();
     }
-    
-    
-    
+
+
     [HttpPost("CreateGroup")]
     public IActionResult CreateGroup(string groupName)
     {
-        if (string.IsNullOrEmpty(groupName))
-        {
-            return BadRequest("Group name cannot be empty.");
-        }
+        if (string.IsNullOrEmpty(groupName)) return BadRequest("Group name cannot be empty.");
 
         var existingGroup = _memberGroupService.GetByName(groupName);
-        if (existingGroup != null)
-        {
-            return BadRequest("A group with this name already exists.");
-        }
+        if (existingGroup != null) return BadRequest("A group with this name already exists.");
 
-        var newGroup = new Umbraco.Cms.Core.Models.MemberGroup { Name = groupName };
+        var newGroup = new MemberGroup { Name = groupName };
         _memberGroupService.Save(newGroup);
 
         return Ok($"Member group '{groupName}' created successfully.");
     }
 
 
-    
     [HttpGet]
     public IActionResult CreateMemberGroup()
     {
         return View();
     }
-    
+
     [HttpPost("CreateMemberGroup")]
     public IActionResult CreateMemberGroup(string memberEmail, string groupName)
     {
         var member = _memberService.GetByEmail(memberEmail);
-        if (member == null)
-        {
-            return NotFound("Member not found.");
-        }
+        if (member == null) return NotFound("Member not found.");
 
         var group = _memberGroupService.GetByName(groupName);
-        if (group == null)
-        {
-            return NotFound("Member group not found.");
-        }
+        if (group == null) return NotFound("Member group not found.");
 
         // Check if the member is already in the group
         var memberGroups = _memberService.GetAllRoles(member.Id);
-        if (memberGroups.Contains(groupName))
-        {
-            return BadRequest("Member is already in this group.");
-        }
+        if (memberGroups.Contains(groupName)) return BadRequest("Member is already in this group.");
 
         _memberService.AssignRole(member.Id, groupName);
 
         return Ok($"Member '{memberEmail}' added to group '{groupName}'.");
     }
-
-
-
-
 }

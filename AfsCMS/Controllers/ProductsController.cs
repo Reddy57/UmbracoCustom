@@ -14,7 +14,7 @@ public class ProductsController : Controller
     }
 
     // GET: Products
-    [Authorize]
+    [Authorize(Roles = "Afs Level1")]
     public async Task<ActionResult> Index()
     {
         
