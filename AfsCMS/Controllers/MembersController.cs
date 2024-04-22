@@ -6,9 +6,7 @@ using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Web;
-using Umbraco.Cms.Web.Common;
 using Umbraco.Cms.Web.Common.Security;
-using Member = Umbraco.Cms.Web.Common.PublishedModels.Member;
 
 namespace AfsCMS.Controllers;
 
@@ -220,7 +218,7 @@ public class MembersController(
 
         var dbMember = await memberManager.FindByIdAsync(memberId.ToString());
         if (dbMember == null) return Redirect("/");
-        var dbMember3 = (Member)  memberManager.AsPublishedMember(dbMember)!;
+        var dbMember3 = (ApplicationCore.GeneratedModels.Member)  memberManager.AsPublishedMember(dbMember)!;
         
         return Ok(new
         {

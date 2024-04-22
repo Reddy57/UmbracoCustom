@@ -8,10 +8,12 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.4" />
+      <PackageReference Include="Umbraco.Cms" Version="13.2.2" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Contracts\Repositories\" />
+      <Folder Include="GeneratedModels\" />
     </ItemGroup>
 
 </Project>

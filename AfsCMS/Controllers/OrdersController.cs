@@ -17,9 +17,9 @@ public class OrdersController : RenderController
     // GET
     public override IActionResult Index()
     {
-        var contentModel = CurrentPage as Orders;
+       // var contentModel = CurrentPage as Orders;
 
 
-        return CurrentTemplate(contentModel);
+        return View();
     }
 }
