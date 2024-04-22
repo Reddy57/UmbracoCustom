@@ -6,20 +6,10 @@ namespace AfsCMS.Controllers;
 
 public class ProductsController : Controller
 {
-    private readonly IAuthenticationSchemeProvider _schemeProvider;
-
-    public ProductsController(IAuthenticationSchemeProvider schemeProvider)
-    {
-        _schemeProvider = schemeProvider;
-    }
-
     // GET: Products
     [Authorize(Roles = "Afs Level1")]
-    public async Task<ActionResult> Index()
+    public ActionResult Index()
     {
-        
-        var defaultScheme = await _schemeProvider.GetDefaultAuthenticateSchemeAsync();
-
         var products = new List<Product>
         {
             new() { Id = 1, Name = "Product 1" },
