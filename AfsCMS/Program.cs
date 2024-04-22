@@ -24,6 +24,7 @@ builder.Services.AddDbContext<AfsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("umbracoDbDSN")));
 
 //sets the default authentication scheme for the app
+/*
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = "AfsScheme";
@@ -38,6 +39,7 @@ builder.Services.AddAuthentication(options =>
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
     });
+    */
 
 
 var app = builder.Build();
@@ -66,7 +68,7 @@ app.UseUmbraco()
     })
     .WithEndpoints(u =>
     {
-        u.EndpointRouteBuilder.MapControllerRoute("OrdersController","/orders/{action}/{id?}",new {Controller="Orders",Action="Index"});
+        //u.EndpointRouteBuilder.MapControllerRoute("OrdersController","/orders/{action}/{id?}",new {Controller="Orders",Action="Index"});
         u.UseInstallerEndpoints();
         u.UseBackOfficeEndpoints();
         u.UseWebsiteEndpoints();
