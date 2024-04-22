@@ -38,29 +38,23 @@ public class AccountService : IAccountService
 
     public async Task<bool> CreateUser(RegisterViewModel requestModel)
     {
-       
         var user = new User
         {
-            FirstName = requestModel.
-            Email = requestModel.Email,
-            LastName = requestModel.LastName,
+            FirstName = requestModel.Email = requestModel.Email,
+            LastName = requestModel.LastName
         };
 
         _afsDbContext.Users.Add(user);
         var saveResult = await _afsDbContext.SaveChangesAsync();
 
         return saveResult > 0;
-
     }
 
     public async Task<bool> CreateUserWithPassword(RegisterWithCredentialsViewModel requestModel)
     {
         var user = await _afsDbContext.Users.FirstOrDefaultAsync(u => u.Email == requestModel.Email);
 
-        if (user == null)
-        {
-            return false;
-        }
+        if (user == null) return false;
         var salt = GenerateSalt();
         var saltedPassword = salt + requestModel.Password;
         var userCredential = new UserCredentials

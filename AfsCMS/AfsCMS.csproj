@@ -17,7 +17,6 @@
 
     <ItemGroup>
       <Folder Include="Composer\" />
-      <Folder Include="Controllers\" />
       <Folder Include="Views\MacroPartials\" />
       <Folder Include="wwwroot\media\" />
     </ItemGroup>

@@ -1,6 +1,7 @@
 using ApplicationCore.Contracts.Services;
 using Infrastructure.Data;
 using Infrastructure.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -65,6 +66,7 @@ app.UseUmbraco()
     })
     .WithEndpoints(u =>
     {
+        u.EndpointRouteBuilder.MapControllerRoute("OrdersController","/orders/{action}/{id?}",new {Controller="Orders",Action="Index"});
         u.UseInstallerEndpoints();
         u.UseBackOfficeEndpoints();
         u.UseWebsiteEndpoints();

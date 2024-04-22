@@ -1,0 +1,10 @@
+﻿
+@using Umbraco.Cms.Web.Common.PublishedModels;
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.Orders>
+@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
+@{
+	Layout = null;
+}
+
+<h2>Order Detail</h2>
+@Model.Value("item")

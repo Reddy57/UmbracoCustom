@@ -1,0 +1,19 @@
+@model ApplicationCore.Models.RegisterWithCredentialsViewModel
+
+@{
+    ViewBag.Title = "title";
+    Layout = "_Layout";
+}
+
+<form asp-action="Register" method="post">
+    <div asp-validation-summary="ModelOnly"></div>
+
+    <label asp-for="Email"></label>
+    <input asp-for="Email" type="email" />
+
+    <label asp-for="Password"></label>
+    <input asp-for="Password" type="password" />
+
+
+    <button type="submit">Register</button>
+</form>
