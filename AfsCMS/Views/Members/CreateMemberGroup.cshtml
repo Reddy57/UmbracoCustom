@@ -1,0 +1,21 @@
+
+
+@{
+    ViewBag.Title = "Create Member Group";
+
+    Layout = "_Layout"; // You might want to set this to your site layout if available
+}
+
+<h1>Assign Member to Group</h1>
+<form method="post" action="@Url.Action("CreateMemberGroup", "Members")">
+    <div>
+        <label for="memberEmail">Member Email:</label>
+        <input type="email" id="memberEmail" name="memberEmail" required />
+    </div>
+    <div>
+        <label for="groupName">Group Name:</label>
+        <input type="text" id="groupName" name="groupName" required />
+    </div>
+    <button type="submit">Assign to Group</button>
+</form>
+

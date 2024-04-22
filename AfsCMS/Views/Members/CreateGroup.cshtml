@@ -1,0 +1,10 @@
+@{
+    Layout = "_Layout"; // You might want to set this to your site layout if available
+}
+
+<h1>Create  Group/Roles</h1>
+<form method="post" action="@Url.Action("CreateGroup", "Members")">
+    <label for="groupName">Group Name:</label>
+    <input type="text" id="groupName" name="groupName" required />
+    <button type="submit">Create Group</button>
+</form>
