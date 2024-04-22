@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.Web;
+using Umbraco.Cms.Web.Common;
 using Umbraco.Cms.Web.Common.Security;
+using Member = Umbraco.Cms.Web.Common.PublishedModels.Member;
 
 namespace AfsCMS.Controllers;
 
@@ -13,7 +16,7 @@ public class MembersController(
     IMemberService memberService,
     IMemberManager memberManager,
     IMemberSignInManager memberSignInManager,
-    IMemberGroupService memberGroupService)
+    IMemberGroupService memberGroupService, IUmbracoContextAccessor umbracoContextAccessor)
     : Controller
 {
     [HttpGet]
@@ -42,6 +45,29 @@ public class MembersController(
         return Ok("Member created successfully.");
     }
     
+    [HttpPost]
+    public IActionResult UpdateMember(int memberId, string email, string firstName, string lastName)
+    {
+        // Retrieve the member from the database
+        var member = memberService.GetById(memberId);
+        if (member == null)
+        {
+            return NotFound("Member not found.");
+        }
+
+        // Update standard properties
+        member.Email = email;
+
+        // Update custom properties
+        member.SetValue("firstName", firstName);
+        member.SetValue("lastName", lastName);
+
+        // Save the changes
+        memberService.Save(member);
+
+        return Ok("Member updated successfully.");
+    }
+
     
     [HttpGet]
     public IActionResult RegisterMember()
@@ -173,4 +199,36 @@ public class MembersController(
 
         return Ok($"Member '{memberEmail}' added to group '{groupName}'.");
     }
+    
+    
+    [HttpGet]
+    public async Task<IActionResult> GetMemberById(int memberId)
+    {
+        // Retrieve the member using IMemberService
+        var member = memberService.GetById(memberId);
+          
+        // Assuming 'firstName', 'lastName', and 'umbracoMemberComments' are aliases for custom properties on the Member type.
+        var firstName = member.GetValue<string>("firstName");
+        var lastName = member.GetValue<string>("lastName");
+        var comments = member.GetValue<string>("umbracoMemberComments");
+        
+        
+        if (member == null)
+        {
+            return NotFound("Member not found.");
+        }
+
+        var dbMember = await memberManager.FindByIdAsync(memberId.ToString());
+        if (dbMember == null) return Redirect("/");
+        var dbMember3 = (Member)  memberManager.AsPublishedMember(dbMember)!;
+        
+        return Ok(new
+        {
+            FirstName = dbMember3?.FirstName,
+            LastName = dbMember3?.LastName
+
+        });
+
+    }
+
 }
